@@ -1,0 +1,154 @@
+---
+title: "Example"
+author: "GALEA"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    social: menu
+    source_code: embed
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+library(plotly)
+library(plyr)
+library(flexdashboard)
+
+# Make some noisily increasing data
+set.seed(955)
+dat <- data.frame(cond = rep(c("A", "B"), each=10),
+                  xvar = 1:20 + rnorm(20,sd=3),
+                  yvar = 1:20 + rnorm(20,sd=3))
+```
+
+Portfolio
+=======================================================================
+
+Row
+-----------------------------------------------------------------------
+
+### Solvency
+
+```{r}
+# Tableau pour le graphe solvabilité
+graphe_solvabilite <- data.frame(Postes = rep(c("coût", "éééééé", "M€", "M€"), 2),
+                                 Annee=rep(c("2018", "2019"), each=4),
+                                 Valeur=c(280.1, 97.3, 646.5, 120.5,275.7, 88.1, 589.9, 112.6))
+
+couleur_perso <- c("#132B43", "#E0E0E0", "#FFFFCC", "#CCE5FF")
+
+# Affichage du graphique
+  plot_ly(graphe_solvabilite,
+    x = ~Annee,
+    y = ~Valeur,
+    type = "bar",
+    group = ~Postes,
+    color = ~Postes,
+    colors = couleur_perso
+  ) %>% 
+    layout(title = list(text = "évolution per year", y = 0.99),
+               xaxis = list(title = "Year"),
+               yaxis = list(title = ""))%>%
+  config(displayModeBar = FALSE)
+
+```
+
+
+### Financial
+
+```{r}
+# Construction du graphique
+graphe_financier <- plot_ly(
+  type = 'scatterpolar',
+  fill = 'toself'
+) 
+graphe_financier <- graphe_financier %>%
+  add_trace(
+    r = c(8.4, 18.2, 52, 0.5, 0.75, 1.6),
+    theta = c("éééé", "û", "M€", 
+              "Cash", "Cash flow", "Gain and loss"),
+    name = '2018'
+  ) 
+graphe_financier <- graphe_financier %>%
+  add_trace(
+    r = c(9.1, 18.2, 52.1, 0.7, 0.95, 6.6),
+    theta = c("Net value", "Duration", "Market value", 
+              "Cash", "Cash flow", "Gain and loss"),
+    name = '2019'
+  ) 
+graphe_financier <- graphe_financier %>%
+  layout(title="Financial indicators",
+    polar = list(
+      radialaxis = list(
+        visible = T,
+        range = c(0,60)
+      )
+    )
+  )
+
+# Affichage du graphique
+graphe_financier
+
+```
+
+
+
+Technics
+=======================================================================
+
+Row
+-----------------------------------------------------------------------
+
+### Data analysis
+
+```{r}
+library(crosstalk)
+# chargement des donnees
+sinistres_mois = openxlsx::read.xlsx("C:/Users/jaboa/Documents/support/sinistre_auto_mrh_choix.xlsx",
+                                     sheet = "base")
+
+sinistres_mois_graphe <- SharedData$new(sinistres_mois, ~produit, 
+                                        group = "Choose a product")
+
+# Affichage du graphe
+plot_ly(sinistres_mois_graphe, x = ~date, y = ~sinistre) %>%
+  config(displayModeBar = FALSE)%>%
+  group_by(produit) %>%
+  add_lines(text = ~produit, hoverinfo = "text") %>%
+  layout(xaxis = list(rangeslider = list(bgcolor="#99d6ff", 
+                                         bordercolor ="#0000ff"),
+                      title = ""),
+         yaxis = list(title = "Number of claims"))%>%
+  highlight(on = "plotly_click", persistent = TRUE, selectize = TRUE)
+
+
+```
+
+
+### Technical result
+
+```{r}
+auto_2018 = openxlsx::read.xlsx("C:/Users/jaboa/Documents/support/discretisation_v3.xlsx", sheet = "auto2018")
+
+graphe_comptes_auto_2018 = auto_2018 %>% 
+  plot_ly(x = ~puissance) %>% 
+  add_bars(y = ~exposition,
+           name = "Exposure") %>% 
+  add_bars(y = ~frequence,
+           name = "Frequency") %>%
+  add_lines(y = ~ratio,
+            name = "ratio",
+            yaxis = "y2") %>% 
+  layout(barmode = "bar",
+         yaxis2 = list(overlaying = "y",
+                       side = "right"),
+         title = list(text = "AUTO's 2019 results", y = 0.99),
+         barmode = "bar",
+         legend = list(x = 1.1, y =1),
+         xaxis = list(title = ""),
+         yaxis = list(title = ""))%>%
+  config(displayModeBar = FALSE)
+
+graphe_comptes_auto_2018
+
+```
